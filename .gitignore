@@ -29,3 +29,6 @@ IRB/
 # R session artifacts
 .Rhistory
 .Rproj.user/
+
+# Local working copy of the public dashboard repo (civilian-witnessing-dashboard)
+dashboard-site/
