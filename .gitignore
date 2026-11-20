@@ -1,0 +1,31 @@
+# Raw and respondent-level survey data — never commit
+Data/
+*.rds
+*.RData
+*.sav
+*.dta
+
+# IRB documents
+IRB/
+
+# Temp/lock files
+~$*
+*.tmp
+.DS_Store
+
+# Claude session files (local preview server)
+.claude/
+
+# Large PDFs (questionnaires, drafts, slides)
+*.pdf
+
+# Working files / co-author drafts
+*.docx
+*.doc
+*.pptx
+*.xlsx
+*.rtf
+
+# R session artifacts
+.Rhistory
+.Rproj.user/
