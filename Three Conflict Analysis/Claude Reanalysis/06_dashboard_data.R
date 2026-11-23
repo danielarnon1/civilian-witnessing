@@ -58,10 +58,20 @@ arm_short <- function(x) sub("\n", " ", x)
 pct <- function(x) round(100 * x, 1)
 
 # ------------------------------------------------------------------ helpers
-fit_effects <- function(d, v, treat, controls) {
-  rhs <- c(treat, if (controls) c(controls_for(d), "m_prior_f"))
+# Control sets for the dashboard's three models:
+#   "no"   = treatment dummies only
+#   "demo" = demographics: age, gender, race, education, income, party, ideology, religious attendance
+#   "ctrl" = demographics + priors: social media use, followed this conflict (not Sudan), prior sympathy (factor)
+DEMO   <- c("c_age", "c_female", "c_white", "c_college", "c_income", "c_party", "c_ideol", "c_attend")
+PRIORS <- c("c_socmed", "c_follow")
+fit_effects <- function(d, v, treat, controls = "no") {
+  if (isTRUE(controls)) controls <- "ctrl"
+  if (isFALSE(controls)) controls <- "no"
+  num <- switch(controls, no = character(0), demo = intersect(DEMO, controls_for(d)),
+                ctrl = intersect(c(DEMO, PRIORS), controls_for(d)))
+  rhs <- c(treat, num, if (controls == "ctrl") "m_prior_f")
   dd <- d %>% filter(!is.na(.data[[v]]))
-  if (controls) dd <- dd %>% filter(if_all(all_of(controls_for(d)), ~ !is.na(.x)))
+  if (length(num)) dd <- dd %>% filter(if_all(all_of(num), ~ !is.na(.x)))
   m <- lm_robust(reformulate(rhs, v), data = dd, se_type = "HC2")
   ci <- confint(m)
   k <- grep(paste0("^", treat), names(coef(m)))
@@ -136,8 +146,8 @@ build_survey <- function(ttl) {
       list(n = r$n[1], g = r$g, e = r$e, lo = r$lo, hi = r$hi, p = r$p)
     }
     list(ctrl_mean = ctrl_mean,
-         arm  = list(no = one("arm_f", FALSE),  ctrl = one("arm_f", TRUE)),
-         side = list(no = one("side_f", FALSE), ctrl = one("side_f", TRUE)))
+         arm  = list(no = one("arm_f", "no"),  demo = one("arm_f", "demo"),  ctrl = one("arm_f", "ctrl")),
+         side = list(no = one("side_f", "no"), demo = one("side_f", "demo"), ctrl = one("side_f", "ctrl")))
   }) %>% set_names(OUTCOMES$key)
   # reorder arm results to arm_order
   te <- map(te, function(o) {
@@ -170,7 +180,7 @@ build_survey <- function(ttl) {
     groups <- if (family == "arm") treat_arms else unname(sideAB)
     eff <- map(lv, function(l) {
       x <- d %>% filter(.data[[mod]] == l)
-      r <- fit_effects(x, dv, treat, FALSE)
+      r <- fit_effects(x, dv, treat, "no")
       if (family == "side") r$g <- unname(sideAB[r$g])
       i <- match(groups, r$g)
       list(level = l, n = r$n[1], e = r$e[i], lo = r$lo[i], hi = r$hi[i], p = r$p[i])
@@ -227,8 +237,9 @@ out <- list(
   q_cut = Q_CUT, min_level_n = MIN_LEVEL_N,
   outcomes = OUTCOMES,
   moderators = MODERATORS %>% select(mod, label, group, item),
-  controls = c("Age", "Female", "White", "4-year degree", "Income (8 brackets)", "Party ID (7-pt)", "Ideology (7-pt)",
-               "Religious attendance", "Social media use", "Followed this conflict", "Prior sympathy in this conflict"),
+  controls = list(demo = c("Age", "Female", "White", "4-year degree", "Income (8 brackets)", "Party ID (7-pt)", "Ideology (7-pt)",
+                           "Religious attendance"),
+                  priors = c("Social media use", "Followed this conflict (not Sudan)", "Prior sympathy in this conflict")),
   surveys = map(surveys$title, build_survey) %>% set_names(surveys$survey)
 )
 
