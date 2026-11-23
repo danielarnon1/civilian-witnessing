@@ -13,8 +13,8 @@
 source("00_prepare.R")
 suppressMessages({ library(estimatr); library(lubridate) })
 
-OUTS <- c(symp_A = "Q5 Sympathy toward A (1-5)", justified = "Q6 A's actions justified (share)",
-          dk_justified = "Q6 Don't know (share)", us_lenient = "Q7 Leave A unpressured (1-3)",
+OUTS <- c(symp_A = "Q5 Sympathy toward A (1-5, middle = 3)", justified = "Q6 A's actions justified (1-3)",
+          dk_justified = "Q6 Don't know (share)", us_lenient = "Q7 Leave A unpressured (1-3, DK = 2)",
           dk_us = "Q7 Don't know (share)", attn_little = "Q8 Too little attention (share)",
           ceasefire = "Q10 Ceasefire importance (1-5)", humanit = "Q11 Humanitarian relief to B (1-5)",
           milaid_A = "Q12 Military aid to A (1-5)")

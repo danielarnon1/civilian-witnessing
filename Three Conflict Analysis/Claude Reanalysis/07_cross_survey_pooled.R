@@ -1,19 +1,20 @@
 # Cross-survey pooling: stack all three surveys and estimate each treatment's effect with survey fixed effects.
 # Side A = Israel / Azerbaijan / SAF (the actor whose conduct Q6/Q7 ask about); side B = Palestinians / Armenians / RSF.
-# Models (OLS, HC2 robust SEs; survey fixed effects absorb level differences between surveys):
+# Models (OLS; SEs clustered by participantId (CR1, Stata-style) because 855 people took both NK and Sudan; survey fixed effects):
 #   (1) pooled by side:  outcome ~ side (A, B vs Control) + survey
 #   (2) by post type:    outcome ~ post (A Witness ... B Stats vs Control) + survey
 #   Heterogeneity across surveys: outcome ~ side * survey; joint Wald test that the side effects are equal in all
 #   three surveys (side x survey terms = 0).
 # Two weightings: respondent-weighted (IH has ~2.4x the respondents of each other survey, so it dominates), and
 # survey-equal (each survey's respondents weighted so every survey counts equally).
+# est_sd = effect in control-group SDs (outcome standardized within survey), for comparing across conflicts.
 # Not part of the dashboard. Outputs: cross_survey_effects.csv, plots/CROSS_*.png
 
 source("00_prepare.R")
 suppressMessages(library(estimatr))
 
-OUT_LAB <- c(symp_A = "Q5 Sympathy toward A (1-5)", justified = "Q6 A's actions justified (share)",
-             dk_justified = "Q6 Don't know (share)", us_lenient = "Q7 Leave A unpressured (1-3)",
+OUT_LAB <- c(symp_A = "Q5 Sympathy toward A (1-5, middle = 3)", justified = "Q6 A's actions justified (1-3)",
+             dk_justified = "Q6 Don't know (share)", us_lenient = "Q7 Leave A unpressured (1-3, DK = 2)",
              dk_us = "Q7 Don't know (share)", attn_little = "Q8 Too little attention (share)",
              ceasefire = "Q10 Ceasefire importance (1-5)", humanit = "Q11 Humanitarian relief to B (1-5)",
              milaid_A = "Q12 Military aid to A (1-5)")
@@ -22,8 +23,15 @@ d <- dd_all %>%
   mutate(survey_f = factor(title, surveys$title),
          side_f = relevel(factor(side), "Control"),
          post = ifelse(side == "Control", "Control", paste(side, fmt)),
-         post_f = relevel(factor(post), "Control")) %>%
+         post_f = relevel(factor(post), "Control"),
+         # 855 people answered both the NK and Sudan surveys: cluster SEs by person (IH has no ID, so each row is its own cluster)
+         cluster_id = ifelse(!is.na(participantId) & participantId != "", participantId, paste0("row", row_number()))) %>%
   group_by(title) %>% mutate(w_equal = (nrow(dd_all) / 3) / n()) %>% ungroup()
+
+# standardize each outcome within survey by that survey's control-group SD (common scale across conflicts)
+std_within <- function(x, v) x %>% group_by(title) %>%
+  mutate(z = (.data[[v]] - mean(.data[[v]][side == "Control"], na.rm = TRUE)) / sd(.data[[v]][side == "Control"], na.rm = TRUE)) %>%
+  ungroup()
 
 wald <- function(m, pat) {
   k <- grep(pat, names(coef(m))); k <- k[!is.na(coef(m)[k])]
@@ -32,19 +40,22 @@ wald <- function(m, pat) {
 }
 
 res <- map_dfr(names(OUT_LAB), function(v) {
-  x <- d %>% filter(!is.na(.data[[v]]))
+  x <- d %>% filter(!is.na(.data[[v]])) %>% std_within(v)
   map_dfr(c(respondent = "respondent", equal = "equal"), function(wt) {
     w <- if (wt == "equal") x$w_equal else NULL
-    m1 <- lm_robust(reformulate(c("side_f", "survey_f"), v), data = x, weights = w, se_type = "HC2")
-    m2 <- lm_robust(reformulate(c("post_f", "survey_f"), v), data = x, weights = w, se_type = "HC2")
-    mh <- lm_robust(reformulate("side_f * survey_f", v), data = x, weights = w, se_type = "HC2")
+    fit <- function(y, rhs) lm_robust(reformulate(rhs, y), data = x, weights = w, clusters = cluster_id, se_type = "stata")
+    m1 <- fit(v, c("side_f", "survey_f")); m2 <- fit(v, c("post_f", "survey_f"))
+    z1 <- fit("z", c("side_f", "survey_f")); z2 <- fit("z", c("post_f", "survey_f"))
+    mh <- fit(v, "side_f * survey_f")
     het <- wald(mh, "^side_f.*:survey_f")
-    tidy_m <- function(m, pre, model) {
+    tidy_m <- function(m, mz, pre, model) {
       ci <- confint(m); k <- grep(paste0("^", pre), names(coef(m)))
+      ciz <- confint(mz)
       tibble(model = model, term = sub(paste0("^", pre), "", names(coef(m))[k]), est = coef(m)[k],
-             lo = ci[k, 1], hi = ci[k, 2], p = m$p.value[k])
+             lo = ci[k, 1], hi = ci[k, 2], p = m$p.value[k],
+             est_sd = coef(mz)[k], lo_sd = ciz[k, 1], hi_sd = ciz[k, 2])
     }
-    bind_rows(tidy_m(m1, "side_f", "Pooled by side"), tidy_m(m2, "post_f", "By post type")) %>%
+    bind_rows(tidy_m(m1, z1, "side_f", "Pooled by side"), tidy_m(m2, z2, "post_f", "By post type")) %>%
       mutate(var = v, weighting = wt, n = nrow(x), het_p = het[["p"]], het_df = het[["df"]])
   })
 }) %>%

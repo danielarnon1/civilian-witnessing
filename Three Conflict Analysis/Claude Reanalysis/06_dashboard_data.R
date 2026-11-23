@@ -23,9 +23,9 @@ keep_levels <- function(x, treat, mod) {
 OUTCOMES <- tribble(
   ~key,           ~label,                                   ~short,                ~scale,      ~dir,
   "symp_A",       "Q5 Sympathies",                          "Sympathy (1-5)",      "1-5 scale", "Higher = more sympathy toward A",
-  "justified",    "Q6 A's military actions are justified",  "Actions justified",   "share",     "Share saying A's actions are justified (don't know excluded)",
+  "justified",    "Q6 A's military actions are justified",  "Actions justified (1-3)", "1-3 scale", "1 = gone too far, 2 = don't know, 3 = justified",
   "dk_justified", "Q6 Don't know enough",                   "Q6 don't know",       "share",     "Share answering 'don't know enough' on Q6",
-  "us_lenient",   "Q7 U.S. approach toward A",              "U.S. approach (1-3)", "1-3 scale", "1 = reduce aid, 2 = diplomatic pressure, 3 = no pressure (don't know excluded)",
+  "us_lenient",   "Q7 U.S. approach toward A",              "U.S. approach (1-3)", "1-3 scale", "1 = reduce aid, 2 = diplomatic pressure or don't know, 3 = no pressure",
   "dk_us",        "Q7 Don't know enough",                   "Q7 don't know",       "share",     "Share answering 'don't know enough' on Q7",
   "attn_little",  "Q8 Leaders give this conflict too little attention", "Too little attention", "share", "Share saying U.S. leaders give this conflict too little attention",
   "ceasefire",    "Q10 Importance of a ceasefire / peace",  "Ceasefire (1-5)",     "1-5 scale", "1 = not at all important, 5 = extremely important",
@@ -59,9 +59,9 @@ pct <- function(x) round(100 * x, 1)
 
 # ------------------------------------------------------------------ helpers
 fit_effects <- function(d, v, treat, controls) {
-  rhs <- c(treat, if (controls) c(CONTROLS, "m_prior_f"))
+  rhs <- c(treat, if (controls) c(controls_for(d), "m_prior_f"))
   dd <- d %>% filter(!is.na(.data[[v]]))
-  if (controls) dd <- dd %>% filter(if_all(all_of(CONTROLS), ~ !is.na(.x)))
+  if (controls) dd <- dd %>% filter(if_all(all_of(controls_for(d)), ~ !is.na(.x)))
   m <- lm_robust(reformulate(rhs, v), data = dd, se_type = "HC2")
   ci <- confint(m)
   k <- grep(paste0("^", treat), names(coef(m)))

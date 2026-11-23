@@ -10,10 +10,10 @@ dir.create("plots", showWarnings = FALSE)
 
 outcomes <- tribble(
   ~var,           ~label,                                            ~direction,
-  "symp_A",       "Q5 Sympathies (1-5; neither / not sure excluded)", "Positive = more sympathy toward Israel / Azerbaijan / SAF",
-  "justified",    "Q6 Actions justified (share, DK excluded)",       "Positive = more likely to say Israel / Azerbaijan / SAF actions are justified",
+  "symp_A",       "Q5 Sympathies (1-5; neither / not sure = 3)", "Positive = more sympathy toward Israel / Azerbaijan / SAF",
+  "justified",    "Q6 Actions justified (1 too far, 2 DK, 3 justified)", "Positive = more favorable view of Israel / Azerbaijan / SAF actions",
   "dk_justified", "Q6 Don't know (share)",                           "Positive = more 'don't know enough'",
-  "us_lenient",   "Q7 U.S. approach (1 reduce aid - 3 no pressure)", "Positive = more lenient toward Israel / Azerbaijan / SAF",
+  "us_lenient",   "Q7 U.S. approach (1 reduce aid - 3 no pressure; DK = 2)", "Positive = more lenient toward Israel / Azerbaijan / SAF",
   "dk_us",        "Q7 Don't know (share)",                           "Positive = more 'don't know enough'",
   "attn_little",  "Q8 Too little attention (share)",                 "Positive = more say U.S. leaders give this conflict too little attention",
   "ceasefire",    "Q10 Importance of ceasefire / peace (1-5)",       "Positive = more important",

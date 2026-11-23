@@ -10,8 +10,11 @@
 #   q5 1 entirely A .. 5 entirely B, 6 neither, 7 not sure | q6 1 justified, 2 gone too far, 3 DK
 #   q7 1 let A pursue, 2 diplomatic pressure, 3 reduce aid, 4 DK | q8 1 too little, 2 right, 3 too much
 # Analysis outcomes (used by 04_treatment_effects.R); higher = more favorable to side A unless noted:
-#   symp_A 1-5 (neither / not sure -> NA) | justified 0/1 (DK -> NA) | dk_justified 0/1
-#   us_lenient 1 reduce aid, 2 pressure, 3 let A pursue (DK -> NA) | dk_us 0/1
+#   PRIMARY (everyone kept, non-committal answers at the midpoint; revised 2026-11-23):
+#   symp_A 1-5 (neither / not sure -> 3) | justified 1 gone too far, 2 don't know, 3 justified
+#   us_lenient 1 reduce aid, 2 pressure OR don't know, 3 let A pursue | dk_justified, dk_us 0/1
+#   ROBUSTNESS: *_subst = substantive answers only (original coding); q5_A / q5_mid / q5_B shares
+#   prior_A (pre-treatment own-conflict sympathy): +1 A, -1 B, 0 both / neither / don't know
 #   attn_little 0/1 "too little attention" to this conflict
 #   ceasefire, humanit, milaid_A 1-5 importance (Q10-Q12)
 
@@ -75,10 +78,17 @@ dd_all <- raw %>%
     q8 = unname(c("Too little attention" = 1, "Right amount of attention" = 2,
                   "Too much attention" = 3)[q8_raw]),
     # ---- analysis outcomes
-    symp_A       = ifelse(q5 <= 5, 6 - q5, NA),
-    justified    = case_when(q6 == 1 ~ 1, q6 == 2 ~ 0),
+    # Primary codings keep every respondent; non-committal answers sit at the scale midpoint.
+    symp_A       = case_when(q5 <= 5 ~ 6 - q5, q5 %in% 6:7 ~ 3),          # neither / not sure -> 3 (= "equally")
+    justified    = case_when(q6 == 2 ~ 1, q6 == 3 ~ 2, q6 == 1 ~ 3),      # 1 gone too far, 2 don't know, 3 justified
+    us_lenient   = case_when(q7 == 3 ~ 1, q7 %in% c(2, 4) ~ 2, q7 == 1 ~ 3), # don't know -> 2 (with diplomatic pressure)
+    # Robustness: substantive answers only (the original coding)
+    symp_A_subst    = ifelse(q5 <= 5, 6 - q5, NA),
+    justified_subst = case_when(q6 == 1 ~ 1, q6 == 2 ~ 0),
+    us_lenient_subst = case_when(q7 == 3 ~ 1, q7 == 2 ~ 2, q7 == 1 ~ 3),
+    # Robustness: three-way shares (toward A / middle / toward B)
+    q5_A = as.numeric(q5 %in% 1:2), q5_mid = as.numeric(q5 %in% c(3, 6, 7)), q5_B = as.numeric(q5 %in% 4:5),
     dk_justified = as.numeric(q6 == 3),
-    us_lenient   = case_when(q7 == 3 ~ 1, q7 == 2 ~ 2, q7 == 1 ~ 3),
     dk_us        = as.numeric(q7 == 4),
     attn_little  = as.numeric(q8 == 1),
     ceasefire    = unname(imp5[`Post-Treatment 10`]),
@@ -126,7 +136,13 @@ dd_all <- dd_all %>%
     c_attend   = ord(`Demographics 14`, c("Never", "A few times a year", "Once or twice a month", "Almost every week", "Every week")),
     c_socmed   = ord(`Pre-Treatment 7a`, c("I do not have social media", "Rarely on social media", "A few hours per week",
                                            "About an hour per day", "Multiple hours per day")),
-    c_follow   = ord(own_follow, c("Not closely at all", "Not too closely", "Somewhat closely", "Very closely", "Extremely closely")),
+    # Sudan's "followed the Sudan war" item (Pr2_4) looks miscoded (18 "not at all" vs 631 "not too closely",
+    # unlike every other attention item), so it is not used for Sudan.
+    c_follow   = ifelse(title == "Sudan", NA,
+                        ord(own_follow, c("Not closely at all", "Not too closely", "Somewhat closely", "Very closely", "Extremely closely"))),
+    prior_A    = case_when(own_sym %in% c("More with the Israelis", "More with the Azerbaijanis/Azeris", "Sudanese Armed Forces/SAF (government)") ~ 1,
+                           own_sym %in% c("More with the Palestinians", "More with the Armenians", "Rapid Support Forces/RSF (rebels)") ~ -1,
+                           !is.na(own_sym) ~ 0),
     # ---- moderators (factors)
     m_party  = case_when(c_party <= 3 ~ "Democrat (incl. leaners)", c_party == 4 ~ "Independent", c_party >= 5 ~ "Republican (incl. leaners)"),
     m_ideol  = case_when(c_ideol <= 3 ~ "Liberal", c_ideol == 4 ~ "Moderate", c_ideol >= 5 ~ "Conservative"),
@@ -182,6 +198,8 @@ MODERATORS <- tribble(
 MODERATORS$levels <- lapply(MODERATORS$levels, unlist)   # tribble wraps each cell in a list
 # Controls for the "with controls" models (prior sympathy enters as factor m_prior, NA as its own level)
 CONTROLS <- c("c_age", "c_female", "c_white", "c_college", "c_income", "c_party", "c_ideol", "c_attend", "c_socmed", "c_follow")
+# controls available in a given data subset (c_follow is missing for Sudan)
+controls_for <- function(df) CONTROLS[sapply(CONTROLS, function(cc) any(!is.na(df[[cc]])))]
 
 # ======================================================================================
 # Pre-treatment moderators (Pr1-Pr7). Pr2 own-conflict attention (m_follow), Pr5/6 own-conflict prior
