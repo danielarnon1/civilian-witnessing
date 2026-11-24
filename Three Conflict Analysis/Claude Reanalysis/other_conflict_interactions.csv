@@ -1,0 +1,8 @@
+"survey","var","item","chi2","df","p","n","categories_tested","categories_dropped","q_bh"
+"Israel-Hamas","o_ukr","Prior: Russia-Ukraine",9.53351000381269,6,0.1457217759545,3291,"More with Ukrainians | More with Russians | Both equally | Neither","",0.2040104863363
+"Nagorno-Karabakh","o_sudan","Prior: Sudan (SAF vs RSF)",2.29378194061278,6,0.890795325361552,1302,"More with RSF | Both equally | Neither | Don't know","More with SAF",0.890795325361552
+"Nagorno-Karabakh","o_ip","Prior: Israel-Palestine",14.7403485453683,10,0.141818927708666,1296,"Mostly Israelis | Equally | Mostly Palestinians | Entirely Palestinians | Neither | Not sure","Entirely Israelis",0.2040104863363
+"Nagorno-Karabakh","o_ukr","Prior: Russia-Ukraine",9.97177478361261,6,0.125845687991502,1326,"More with Ukrainians | More with Russians | Both equally | Neither","Don't know",0.2040104863363
+"Sudan","o_nk","Prior: Nagorno-Karabakh",9.90737323190962,6,0.128607321228322,1377,"More with Armenians | Both equally | Neither | Don't know","More with Azerbaijanis",0.2040104863363
+"Sudan","o_ip","Prior: Israel-Palestine",31.4083947017128,12,0.0017062524876503,1404,"Entirely Israelis | Mostly Israelis | Equally | Mostly Palestinians | Entirely Palestinians | Neither | Not sure","",0.0119437674135521
+"Sudan","o_ukr","Prior: Russia-Ukraine",5.78253275878906,4,0.215988151419683,1261,"More with Ukrainians | Both equally | Neither","More with Russians | Don't know",0.251986176656297
