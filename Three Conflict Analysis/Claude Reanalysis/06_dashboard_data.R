@@ -227,12 +227,28 @@ build_survey <- function(ttl) {
     })
   }
 
+  # ---- moderation by prior sympathies in OTHER conflicts (from 18_other_conflict_priors.R)
+  other_priors <- NULL
+  if (file.exists("other_conflict_interactions.csv") && file.exists("other_conflict_priors.csv")) {
+    oi <- read.csv("other_conflict_interactions.csv") %>% filter(survey == ttl)
+    oe <- read.csv("other_conflict_priors.csv") %>% filter(survey == ttl)
+    other_priors <- map(seq_len(nrow(oi)), function(j) {
+      e <- oe %>% filter(var == oi$var[j]) %>% mutate(cat = factor(cat, unique(cat)))
+      cats <- levels(e$cat)
+      pick <- function(sd_) e %>% filter(side == sd_) %>% slice(match(cats, as.character(cat)))
+      a <- pick("A"); b <- pick("B")
+      list(item = sub("^Prior: ", "", oi$item[j]), chi2 = oi$chi2[j], df = oi$df[j], p = oi$p[j], q = oi$q_bh[j],
+           dropped = oi$categories_dropped[j], cats = cats, n = a$n, n_ctrl = a$n_ctrl, small = a$small,
+           A = list(e = a$est, lo = a$lo, hi = a$hi, p = a$p), B = list(e = b$est, lo = b$lo, hi = b$hi, p = b$p))
+    })
+  }
+
   list(key = s$survey, title = ttl, A = s$A_lab, B = s$B_lab, n = nrow(d),
        n_arm = as.integer(table(factor(d$arm_s, arm_order))), arms = arm_order,
        fielded = paste(range(d$year_resp), collapse = "-"),
        dist = dist, sample = sample, te = te,
        het = het %>% mutate(across(c(stat, p, q), ~ signif(.x, 4))),
-       sub = sub, bygroup = bygroup, words = words)
+       sub = sub, bygroup = bygroup, words = words, other_priors = other_priors)
 }
 
 out <- list(
