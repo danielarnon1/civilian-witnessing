@@ -125,15 +125,20 @@ gen_tab <- map_dfr(c(surveys$title, "Pooled (3 surveys)"), function(t) imap_dfr(
 write.csv(gen_tab, "genocide_mentions.csv", row.names = FALSE)
 cat("saved genocide_mentions.csv\n")
 
-gp <- gen_tab %>%
+# figure: personal narratives (witness + news story pooled), statistics, all posts; all three surveys + pooled
+FIG_GROUPS <- c("Personal (witness + news)" = "Personal narratives\n(witness + news story)", "Statistics" = "Statistics", "All posts" = "All posts")
+gen_fig <- gen_tab %>% filter(group %in% names(FIG_GROUPS)) %>% mutate(group = FIG_GROUPS[group])
+survey_lab <- c("Israel-Hamas" = "Israel-Hamas\n(A = Israel, B = Palestine)", "Nagorno-Karabakh" = "Nagorno-Karabakh\n(A = Azerbaijan, B = Armenia)",
+                "Sudan" = "Sudan\n(A = SAF, B = RSF)", "Pooled (3 surveys)" = "All three surveys pooled\n ")
+gp <- gen_fig %>%
   pivot_longer(c(share_A, share_B), names_to = "side", values_to = "share") %>%
   mutate(side = sub("share_", "", side), se = ifelse(side == "A", se_A, se_B), k = ifelse(side == "A", k_A, k_B),
          n = ifelse(side == "A", n_A, n_B),
          lo = pmax(0, share - 1.96 * se), hi = share + 1.96 * se,
-         survey = factor(survey, c(surveys$title, "Pooled (3 surveys)")),
-         group = factor(group, rev(names(GROUPS))),
+         survey = factor(survey_lab[survey], survey_lab),
+         group = factor(group, rev(FIG_GROUPS)),
          side_lab = ifelse(side == "A", "After posts about Israel / Azerbaijan / SAF suffering", "After posts about Palestine / Armenia / RSF suffering"))
-gd <- gen_tab %>% mutate(survey = factor(survey, levels(gp$survey)), group = factor(group, rev(names(GROUPS))),
+gd <- gen_fig %>% mutate(survey = factor(survey_lab[survey], survey_lab), group = factor(group, rev(FIG_GROUPS)),
                          lab = sprintf("B-A %+.1f%s", 100 * diff, case_when(diff_p < .01 ~ "**", diff_p < .05 ~ "*", diff_p < .10 ~ "+", TRUE ~ "")))
 g5 <- ggplot(gp, aes(100 * share, group, colour = side_lab)) +
   geom_pointrange(aes(xmin = 100 * lo, xmax = 100 * hi), position = position_dodge(width = 0.55), size = 0.35, linewidth = 0.7) +
@@ -143,10 +148,10 @@ g5 <- ggplot(gp, aes(100 * share, group, colour = side_lab)) +
   scale_colour_manual(values = c("After posts about Israel / Azerbaijan / SAF suffering" = "#2B6CB0",
                                  "After posts about Palestine / Armenia / RSF suffering" = "#DD6B20"), name = NULL) +
   labs(x = "% of answers mentioning \"genocide\" (95% CI)", y = NULL,
-       title = "Q3 three words: how often respondents wrote \"genocide\", by post format and side",
+       title = "Q3 three words: how often respondents wrote \"genocide\" after personal stories vs. statistics",
        subtitle = "Asked only after the post (no control group). Right: difference B - A in percentage points; ** p<.01 * p<.05 + p<.10.") +
   theme_minimal(base_size = 11) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(), legend.position = "bottom",
         strip.text = element_text(face = "bold", size = 11), plot.title.position = "plot", panel.spacing.x = unit(1.2, "lines"))
-ggsave("plots/TEXT_genocide_mentions.png", g5, width = 15, height = 5.5, dpi = 200, bg = "white")
+ggsave("plots/TEXT_genocide_mentions.png", g5, width = 15, height = 4.8, dpi = 200, bg = "white")
 cat("saved plots/TEXT_genocide_mentions.png\n")

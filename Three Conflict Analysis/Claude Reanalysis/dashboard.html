@@ -185,13 +185,15 @@ svg text{font-family:system-ui,sans-serif}
 
 <section id="genocide">
   <div class="sh">Mentions of “genocide” in the three words</div>
-  <p class="lead">Share of respondents who wrote “genocide” (or “genocidal”) among their three words, after posts about each side, by post format. Q3 was asked only after the post, so there is <b>no control group</b>: the comparison is between posts about the two sides. The right-hand number in the table is the difference (posts about <span class="nmB"></span> minus posts about <span class="nmA"></span>).</p>
+  <p class="lead">Share of respondents who wrote “genocide” (or “genocidal”) among their three words, after posts about each side. Shown for <b>each survey separately and all three pooled</b> (this section does not change with the survey tabs). <b>Personal narratives</b> pool the witness and news-story posts; <b>statistics</b> are the statistics posts. Q3 was asked only after the post, so there is <b>no control group</b>: the comparison is between posts about the two sides (B − A in the table).</p>
+  <div class="lgd"><div class="li"><div class="ld" style="background:var(--sa)"></div>Posts about Israel / Azerbaijan / SAF suffering (A)</div><div class="li"><div class="ld" style="background:var(--sb)"></div>Posts about Palestine / Armenia / RSF suffering (B)</div></div>
   <div class="grid2">
-    <div class="card"><div class="clbl" id="gen-t1" style="margin-bottom:4px"></div><svg id="gen-c1" width="100%" style="display:block"></svg></div>
-    <div class="card"><div class="clbl" style="margin-bottom:4px">All three surveys pooled</div><svg id="gen-c2" width="100%" style="display:block"></svg></div>
+    <div class="card"><div class="clbl" style="margin-bottom:4px">Israel-Hamas (A = Israel, B = Palestine)</div><svg id="gen-c-ih" width="100%" style="display:block"></svg></div>
+    <div class="card"><div class="clbl" style="margin-bottom:4px">Nagorno-Karabakh (A = Azerbaijan, B = Armenia)</div><svg id="gen-c-nk" width="100%" style="display:block"></svg></div>
+    <div class="card"><div class="clbl" style="margin-bottom:4px">Sudan (A = SAF, B = RSF)</div><svg id="gen-c-sudan" width="100%" style="display:block"></svg></div>
+    <div class="card"><div class="clbl" style="margin-bottom:4px">All three surveys pooled</div><svg id="gen-c-pooled" width="100%" style="display:block"></svg></div>
   </div>
-  <div class="lgd" style="margin-top:8px"><div class="li"><div class="ld" style="background:var(--sa)"></div><span class="nmA2"></span></div><div class="li"><div class="ld" style="background:var(--sb)"></div><span class="nmB2"></span></div></div>
-  <div class="card"><table class="tbl"><thead><tr><th>Post format</th><th class="num" id="gen-hA"></th><th class="num" id="gen-hB"></th><th class="num">Difference</th><th class="num">p</th><th class="num">Pooled difference</th><th class="num">p</th></tr></thead><tbody id="gen-body"></tbody></table></div>
+  <div class="card" style="margin-top:10px"><table class="tbl"><thead><tr><th>Survey</th><th>Posts</th><th class="num">A posts</th><th class="num">B posts</th><th class="num">B − A</th><th class="num">p</th></tr></thead><tbody id="gen-body"></tbody></table></div>
   <p class="note">Difference tested with robust SEs; pooled across surveys with survey fixed effects and SEs clustered by participant. Counts are small (11–82 mentions per survey), so differences between single formats within a survey are rough. From 09_open_text.R; static figure in plots/TEXT_genocide_mentions.png.</p>
 </section>
 
@@ -524,23 +526,33 @@ function renderWords(){
 }
 
 // ── "genocide" mentions in Q3 ───────────────────────────────────────────
+// All three surveys and the pooled estimate at once (independent of the survey tabs).
+// Rows: personal narratives (witness + news story pooled), statistics, all posts.
+const GEN_GROUPS = [['Personal (witness + news)', 'Personal narratives (witness + news story)'], ['Statistics', 'Statistics'], ['All posts', 'All posts']];
 function renderGenocide(){
-  const sec = document.getElementById('genocide'), g = S().genocide, gp = DATA.genocide_pooled;
-  if (!g || !g.length) { sec.style.display = 'none'; return; }
+  const sec = document.getElementById('genocide');
+  const panels = [['ih', DATA.surveys.ih && DATA.surveys.ih.genocide, 'Israel-Hamas', NAMES.ih],
+                  ['nk', DATA.surveys.nk && DATA.surveys.nk.genocide, 'Nagorno-Karabakh', NAMES.nk],
+                  ['sudan', DATA.surveys.sudan && DATA.surveys.sudan.genocide, 'Sudan', NAMES.sudan],
+                  ['pooled', DATA.genocide_pooled, 'All three pooled', {A: 'Israel / Azerbaijan / SAF', B: 'Palestine / Armenia / RSF'}]];
+  if (!panels[0][1] || !panels[0][1].length) { sec.style.display = 'none'; return; }
   sec.style.display = '';
-  document.getElementById('gen-t1').textContent = `${S().title} survey`;
-  const toRows = arr => arr.map(r => ({label: r.group, series: [
-    {m: r.share_A, lo: Math.max(0, r.share_A - 1.96 * r.se_A), hi: r.share_A + 1.96 * r.se_A, n: r.n_A, name: `${N().A} posts (${r.k_A} of ${r.n_A})`, color: css('--sa')},
-    {m: r.share_B, lo: Math.max(0, r.share_B - 1.96 * r.se_B), hi: r.share_B + 1.96 * r.se_B, n: r.n_B, name: `${N().B} posts (${r.k_B} of ${r.n_B})`, color: css('--sb')}]}));
-  dotMeans(document.getElementById('gen-c1'), toRows(g), {share: true, labelW: 170});
-  if (gp && gp.length) dotMeans(document.getElementById('gen-c2'), toRows(gp), {share: true, labelW: 170});
-  document.getElementById('gen-hA').textContent = `${N().A} posts`; document.getElementById('gen-hB').textContent = `${N().B} posts`;
-  const cell = r => `${(r * 100).toFixed(1)}%`;
-  document.getElementById('gen-body').innerHTML = g.map(r => {
-    const p = gp ? gp.find(x => x.group === r.group) : null;
-    const d = (v, pv) => `<td class="num ${pv < .05 ? 'sig' : ''}">${(v >= 0 ? '+' : '') + (v * 100).toFixed(1)} pts${stars(pv)}</td><td class="num">${pf(pv)}</td>`;
-    return `<tr><td>${esc(r.group)}</td><td class="num">${cell(r.share_A)} <span class="ci">(${r.k_A}/${r.n_A})</span></td><td class="num">${cell(r.share_B)} <span class="ci">(${r.k_B}/${r.n_B})</span></td>${d(r.diff, r.diff_p)}${p ? d(p.diff, p.diff_p) : '<td></td><td></td>'}</tr>`;
-  }).join('');
+  const pick = arr => GEN_GROUPS.map(([key, lab]) => ({lab, r: arr.find(x => x.group === key)})).filter(x => x.r);
+  let body = '';
+  panels.forEach(([key, arr, title, nm]) => {
+    if (!arr || !arr.length) return;
+    const rows = pick(arr).map(({lab, r}) => ({label: lab.startsWith('Personal') ? 'Witness + news story' : lab, series: [
+      {m: r.share_A, lo: Math.max(0, r.share_A - 1.96 * r.se_A), hi: r.share_A + 1.96 * r.se_A, n: r.n_A, name: `${nm.A} posts (${r.k_A} of ${r.n_A})`, color: css('--sa')},
+      {m: r.share_B, lo: Math.max(0, r.share_B - 1.96 * r.se_B), hi: r.share_B + 1.96 * r.se_B, n: r.n_B, name: `${nm.B} posts (${r.k_B} of ${r.n_B})`, color: css('--sb')}]}));
+    dotMeans(document.getElementById(`gen-c-${key}`), rows, {share: true, labelW: 140});
+    pick(arr).forEach(({lab, r}, i) => {
+      const cell = (p, k, n) => `${(p * 100).toFixed(1)}% <span class="ci">(${k}/${n})</span>`;
+      body += `<tr${i === 0 ? ' style="border-top:2px solid var(--border)"' : ''}><td>${i === 0 ? `<b>${esc(title)}</b>` : ''}</td><td>${esc(lab)}</td>
+        <td class="num">${cell(r.share_A, r.k_A, r.n_A)}</td><td class="num">${cell(r.share_B, r.k_B, r.n_B)}</td>
+        <td class="num ${r.diff_p < .05 ? 'sig' : ''}">${(r.diff >= 0 ? '+' : '') + (r.diff * 100).toFixed(1)} pts${stars(r.diff_p)}</td><td class="num">${pf(r.diff_p)}</td></tr>`;
+    });
+  });
+  document.getElementById('gen-body').innerHTML = body;
 }
 
 function effRows(kind, k){
