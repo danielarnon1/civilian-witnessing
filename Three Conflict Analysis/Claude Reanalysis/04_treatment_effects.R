@@ -12,7 +12,9 @@ outcomes <- tribble(
   "symp_A",       "Q5 Sympathies (1-5; neither / not sure = 3)", "Positive = more sympathy toward Israel / Azerbaijan / SAF",
   "justified",    "Q6 Actions justified (1 too far, 2 DK, 3 justified)", "Positive = more favorable view of Israel / Azerbaijan / SAF actions",
   "dk_justified", "Q6 Don't know (share)",                           "Positive = more 'don't know enough'",
-  "us_lenient",   "Q7 U.S. approach (1 reduce aid - 3 no pressure; DK = 2)", "Positive = more lenient toward Israel / Azerbaijan / SAF",
+  "q7_reduce",    "Q7 U.S. should reduce military aid to A (share)", "Positive = more choose: reduce military aid to Israel / Azerbaijan / SAF until it ends the war",
+  "q7_pressure",  "Q7 U.S. should apply diplomatic pressure, keep aid (share)", "Positive = more choose: diplomatic pressure on Israel / Azerbaijan / SAF but keep aid",
+  "q7_nopress",   "Q7 U.S. should let A act without pressure (share)", "Positive = more choose: let Israel / Azerbaijan / SAF pursue its policy without U.S. pressure",
   "dk_us",        "Q7 Don't know (share)",                           "Positive = more 'don't know enough'",
   "attn_little",  "Q8 Too little attention (share)",                 "Positive = more say U.S. leaders give this conflict too little attention",
   "ceasefire",    "Q10 Importance of ceasefire / peace (1-5)",       "Positive = more important",
@@ -86,7 +88,9 @@ plot_te <- function(v, file) {
 plot_te("symp_A",       "TE_Q5_sympathies.png")
 plot_te("justified",    "TE_Q6_justified.png")
 plot_te("dk_justified", "TE_Q6_dont_know.png")
-plot_te("us_lenient",   "TE_Q7_us_approach.png")
+plot_te("q7_reduce",    "TE_Q7_reduce_aid.png")
+plot_te("q7_pressure",  "TE_Q7_diplomatic_pressure.png")
+plot_te("q7_nopress",   "TE_Q7_no_pressure.png")
 plot_te("dk_us",        "TE_Q7_dont_know.png")
 plot_te("attn_little",  "TE_Q8_too_little_attention.png")
 plot_te("ceasefire",    "TE_Q10_ceasefire.png")

@@ -90,6 +90,11 @@ dd_all <- raw %>%
     q5_A = as.numeric(q5 %in% 1:2), q5_mid = as.numeric(q5 %in% c(3, 6, 7)), q5_B = as.numeric(q5 %in% 4:5),
     dk_justified = as.numeric(q6 == 3),
     dk_us        = as.numeric(q7 == 4),
+    # Q7 as four 0/1 outcomes on the full sample (each option vs. everything else; they sum to 1)
+    q7_reduce    = as.numeric(q7 == 3),   # reduce military aid to A until it ends the war
+    q7_pressure  = as.numeric(q7 == 2),   # diplomatic pressure, keep aid
+    q7_nopress   = as.numeric(q7 == 1),   # let A pursue its policy without U.S. pressure
+    # (dk_us above is the fourth: don't know enough)
     attn_little  = as.numeric(q8 == 1),
     ceasefire    = unname(imp5[`Post-Treatment 10`]),
     humanit      = unname(imp5[`Post-Treatment 11`]),

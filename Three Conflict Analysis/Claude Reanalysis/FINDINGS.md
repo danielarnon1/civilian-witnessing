@@ -21,6 +21,14 @@ The old substantive-only codings are kept as `*_subst`. Three-way shares are in 
 
 **Why the change:** the posts changed who gave a substantive answer. For example, the Sudan SAF statistics post raised the share answering Q6 by 23 points. Dropping the non-committal answers therefore mixed persuasion with selection, and it inflated the large NK/Sudan effects: Sudan B posts on Q5 were −0.67 substantive-only vs −0.31 at the midpoint.
 
+**Q7 as four outcomes (since 2026-11-24).** In the effect figures (`04`, `05`, `07`), `16_q7_binary.R` and the dashboard, Q7 is analysed as four 0/1 shares on the full sample, which sum to 100%: `q7_reduce` (reduce military aid to A), `q7_pressure` (diplomatic pressure, keep aid), `q7_nopress` (let A act without pressure) and `dk_us` (don't know). The 1–3 `us_lenient` scale remains only inside the Q5–Q7 victim-direction index (`13`).
+
+Pooled across surveys:
+- **Palestine / Armenia / RSF posts** raise "reduce aid" by 5.1 points and lower "no pressure" by 6.6 (both p < .01).
+- **Israel / Azerbaijan / SAF posts** mostly raise "don't know" (+3.8, p < .05).
+- **Sudan:** RSF posts move "reduce aid" +15 and "no pressure" −14.
+- **NK:** posts about either side raise "diplomatic pressure" by about 7 points.
+
 ## Hypotheses (`13_victim_direction.R`; primary = Lin adjustment for prior sympathy)
 
 Victim-direction effect = average shift toward the side whose suffering was shown, over posts about both sides. Index = mean of Q5–Q7, each in control-group SDs.

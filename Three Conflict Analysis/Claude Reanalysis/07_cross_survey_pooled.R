@@ -14,7 +14,8 @@ source("00_prepare.R")
 suppressMessages(library(estimatr))
 
 OUT_LAB <- c(symp_A = "Q5 Sympathy toward A (1-5, middle = 3)", justified = "Q6 A's actions justified (1-3)",
-             dk_justified = "Q6 Don't know (share)", us_lenient = "Q7 Leave A unpressured (1-3, DK = 2)",
+             dk_justified = "Q6 Don't know (share)", q7_reduce = "Q7 Reduce military aid to A (share)", q7_pressure = "Q7 Diplomatic pressure, keep aid (share)",
+             q7_nopress = "Q7 Let A act, no U.S. pressure (share)",
              dk_us = "Q7 Don't know (share)", attn_little = "Q8 Too little attention (share)",
              ceasefire = "Q10 Ceasefire importance (1-5)", humanit = "Q11 Humanitarian relief to B (1-5)",
              milaid_A = "Q12 Military aid to A (1-5)")
@@ -93,7 +94,7 @@ plot_cross <- function(mod, file, h) {
                         name = NULL) +
     scale_shape_manual(values = c(Witness = 16, News = 17, Stats = 15), name = NULL) +
     scale_x_continuous(limits = c(-rng, rng) * 1.35) +
-    labs(x = "Difference from Control, all three surveys pooled (95% CI; survey fixed effects; HC2)", y = NULL,
+    labs(x = "Difference from Control, all three surveys pooled (95% CI; survey fixed effects; SEs clustered by participant)", y = NULL,
          title = paste0("Cross-survey pooled treatment effects: ", tolower(mod)),
          subtitle = paste0("Respondents from all three surveys stacked (N = ", scales::comma(nrow(d)),
                            "). Blue = posts about Israel / Azerbaijan / SAF suffering; orange = Palestine / Armenia / RSF.\n",
