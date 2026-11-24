@@ -96,7 +96,10 @@ pd <- within_eff %>% filter(!is.na(est)) %>%
   mutate(item_order = match(paste(survey, var), paste(ITEMS$survey, ITEMS$var)),
          cat_order = map2_int(var, cat, ~ match(.y, LEVELS[[.x]])),
          survey = factor(survey, surveys$title),
-         panel_txt = paste0(survey, " survey  |  ", item, "\n", note),
+         survey_head = c("Israel-Hamas" = "ISRAEL-HAMAS SURVEY (A = Israel, B = Palestine)",
+                         "Nagorno-Karabakh" = "NAGORNO-KARABAKH SURVEY (A = Azerbaijan, B = Armenia)",
+                         "Sudan" = "SUDAN SURVEY (A = SAF, B = RSF)")[as.character(survey)],
+         panel_txt = paste0(survey_head, "\n", item, "  |  ", note),
          panel = factor(panel_txt, unique(panel_txt[order(item_order)])),
          cat_lab = paste0(cat, " (n=", n, "; ctrl ", n_ctrl, ")"),
          key_txt = paste(panel_txt, cat_lab, sep = "||"),
@@ -119,6 +122,6 @@ g <- ggplot(pd, aes(est, key, colour = side_lab, alpha = alpha)) +
                          "Panels in order: Israel-Hamas (Ukraine), Nagorno-Karabakh (Sudan, Israel-Palestine, Ukraine), Sudan (Nagorno-Karabakh, Israel-Palestine, Ukraine).")) +
   theme_minimal(base_size = 9.5) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(), legend.position = "bottom",
-        strip.text = element_text(face = "bold", hjust = 0, size = 9.5), plot.title.position = "plot", panel.spacing = unit(0.9, "lines"))
+        strip.text = element_text(face = "bold", hjust = 0, size = 9.5, lineheight = 1.15), plot.title.position = "plot", panel.spacing = unit(1.1, "lines"))
 ggsave("plots/OTHER_PRIORS_sympathy.png", g, width = 14, height = 15, dpi = 200, bg = "white")
 cat("saved plots/OTHER_PRIORS_sympathy.png\n")
