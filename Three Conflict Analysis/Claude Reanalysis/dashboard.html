@@ -581,12 +581,39 @@ function renderHet(){
   });
 }
 
+// second row of outcome buttons inside the by-group grid; kept in sync with the top row,
+// and the page stays put (the clicked row keeps its position on screen) after re-rendering
+function bgPillRow(){
+  const row = document.createElement('div'); row.className = 'card'; row.id = 'bg-pills2'; row.style.gridColumn = '1/-1';
+  const inner = document.createElement('div'); inner.className = 'ctrl-row'; inner.style.marginBottom = '0';
+  inner.innerHTML = '<span class="clbl">Outcome:</span>';
+  OUT.forEach(o => {
+    const b = document.createElement('button'); b.className = 'pill' + (o.k === bgK ? ' on' : ''); b.textContent = T(o.t);
+    b.onclick = () => {
+      const y0 = row.getBoundingClientRect().top;
+      bgK = o.k;
+      document.querySelectorAll('#bg-pills .pill').forEach(p => p.classList.toggle('on', p.textContent === T(o.t)));
+      renderByGroup();
+      const r2 = document.getElementById('bg-pills2'); if (r2) window.scrollBy(0, r2.getBoundingClientRect().top - y0);
+    };
+    inner.appendChild(b);
+  });
+  row.appendChild(inner);
+  return row;
+}
+
 function renderByGroup(){
   const s = S(), ou = OUT.find(o=>o.k===bgK), bg = s.bygroup[bgK]; const grid = document.getElementById('bg-grid'); grid.innerHTML = '';
   let lastGrp = null;
   DATA.moderators.forEach((m, idx) => {
     const g = bg[m.mod]; if (!g || !g.rows || !g.rows.length) return;
-    if (m.group !== lastGrp) { const hd = document.createElement('div'); hd.className = 'sh2'; hd.style.gridColumn = '1/-1'; hd.textContent = m.group === 'Demographics' ? 'Demographics' : 'Pre-treatment attitudes and media use (Pr1–Pr7)'; grid.appendChild(hd); lastGrp = m.group; }
+    if (m.group !== lastGrp) {
+      const hd = document.createElement('div'); hd.className = 'sh2'; hd.style.gridColumn = '1/-1';
+      hd.textContent = m.group === 'Demographics' ? 'Demographics' : 'Pre-treatment attitudes and media use (Pr1–Pr7)';
+      grid.appendChild(hd);
+      if (lastGrp !== null) grid.appendChild(bgPillRow());   // repeat the outcome buttons before the pre-treatment panels
+      lastGrp = m.group;
+    }
     const p = document.createElement('div'); p.className = 'xt-panel';
     p.innerHTML = `<div class="xt-t">${esc(m.item)} · ${esc(m.label)}</div><div class="xt-p">Differs across groups: <span class="${g.p<.05?'sig':''}">p = ${pf(g.p)}</span> · overall mean ${ou.share ? (g.overall*100).toFixed(1)+'%' : g.overall.toFixed(2)}</div><svg id="bg-${idx}" width="100%"></svg>`;
     grid.appendChild(p);
