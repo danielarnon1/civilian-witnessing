@@ -5,7 +5,7 @@
 #   - words that most distinguish posts about one side from the other
 # Words are lower-cased, stop words removed, and stemmed for counting (sad / sadness / saddened count together);
 # each stem is shown as its most common surface form. A word is counted once per respondent.
-# Outputs: plots/TEXT_*.png, open_text_words.csv (read by 06_dashboard_data.R)
+# Outputs: plots/TEXT_*.png, open_text_words.csv and genocide_mentions.csv (both read by 06_dashboard_data.R)
 
 source("00_prepare.R")
 suppressMessages({ library(tidytext); library(SnowballC); library(ggwordcloud) })
@@ -99,3 +99,54 @@ g2 <- ggplot(dist_side, aes(100 * diff, label, fill = lean)) +
                                         plot.title.position = "plot")
 ggsave("plots/TEXT_distinctive_by_side.png", g2, width = 13, height = 7, dpi = 200, bg = "white")
 cat("saved plots/TEXT_distinctive_by_side.png\n")
+
+# ---------------------------------------------------------------- mentions of "genocide" (incl. "genocidal")
+# Share of answers using the word, after posts about each side, by format and pooled groupings; B - A tested with
+# HC2 SEs (pooled across surveys: survey fixed effects, SEs clustered by participant). No control: Q3 was asked only
+# after the post. Outputs: genocide_mentions.csv (read by 06_dashboard_data.R), plots/TEXT_genocide_mentions.png
+suppressMessages(library(estimatr))
+gx <- dd_all %>% mutate(txt = blank_na(`Post-Treatment 3`)) %>%
+  filter(side != "Control", !is.na(txt)) %>%
+  mutate(gen = as.numeric(grepl("genocid", txt, ignore.case = TRUE)),
+         cluster_id = ifelse(!is.na(participantId) & participantId != "", participantId, paste0("row", row_number())))
+GROUPS <- list("Witness" = "Witness", "News story" = "News", "Statistics" = "Stats",
+               "Personal (witness + news)" = c("Witness", "News"), "All posts" = c("Witness", "News", "Stats"))
+gen_tab <- map_dfr(c(surveys$title, "Pooled (3 surveys)"), function(t) imap_dfr(GROUPS, function(fm, gname) {
+  z <- gx %>% filter(fmt %in% fm); if (t != "Pooled (3 surveys)") z <- z %>% filter(title == t)
+  s <- z %>% group_by(side) %>% summarise(n = n(), k = sum(gen), p = mean(gen), .groups = "drop") %>%
+    mutate(se = sqrt(p * (1 - p) / n))
+  m <- if (t == "Pooled (3 surveys)") lm_robust(gen ~ side + title, data = z, clusters = cluster_id, se_type = "stata")
+       else lm_robust(gen ~ side, data = z, se_type = "HC2")
+  tibble(survey = t, group = gname,
+         n_A = s$n[s$side == "A"], k_A = s$k[s$side == "A"], share_A = s$p[s$side == "A"], se_A = s$se[s$side == "A"],
+         n_B = s$n[s$side == "B"], k_B = s$k[s$side == "B"], share_B = s$p[s$side == "B"], se_B = s$se[s$side == "B"],
+         diff = coef(m)[["sideB"]], diff_p = m$p.value[["sideB"]])
+}))
+write.csv(gen_tab, "genocide_mentions.csv", row.names = FALSE)
+cat("saved genocide_mentions.csv\n")
+
+gp <- gen_tab %>%
+  pivot_longer(c(share_A, share_B), names_to = "side", values_to = "share") %>%
+  mutate(side = sub("share_", "", side), se = ifelse(side == "A", se_A, se_B), k = ifelse(side == "A", k_A, k_B),
+         n = ifelse(side == "A", n_A, n_B),
+         lo = pmax(0, share - 1.96 * se), hi = share + 1.96 * se,
+         survey = factor(survey, c(surveys$title, "Pooled (3 surveys)")),
+         group = factor(group, rev(names(GROUPS))),
+         side_lab = ifelse(side == "A", "After posts about Israel / Azerbaijan / SAF suffering", "After posts about Palestine / Armenia / RSF suffering"))
+gd <- gen_tab %>% mutate(survey = factor(survey, levels(gp$survey)), group = factor(group, rev(names(GROUPS))),
+                         lab = sprintf("B-A %+.1f%s", 100 * diff, case_when(diff_p < .01 ~ "**", diff_p < .05 ~ "*", diff_p < .10 ~ "+", TRUE ~ "")))
+g5 <- ggplot(gp, aes(100 * share, group, colour = side_lab)) +
+  geom_pointrange(aes(xmin = 100 * lo, xmax = 100 * hi), position = position_dodge(width = 0.55), size = 0.35, linewidth = 0.7) +
+  geom_text(data = gd, aes(x = 16, y = group, label = lab), inherit.aes = FALSE, hjust = 1, size = 2.9, colour = "grey30") +
+  facet_wrap(~survey, nrow = 1) +
+  scale_x_continuous(limits = c(0, 16), breaks = seq(0, 12, 3)) +
+  scale_colour_manual(values = c("After posts about Israel / Azerbaijan / SAF suffering" = "#2B6CB0",
+                                 "After posts about Palestine / Armenia / RSF suffering" = "#DD6B20"), name = NULL) +
+  labs(x = "% of answers mentioning \"genocide\" (95% CI)", y = NULL,
+       title = "Q3 three words: how often respondents wrote \"genocide\", by post format and side",
+       subtitle = "Asked only after the post (no control group). Right: difference B - A in percentage points; ** p<.01 * p<.05 + p<.10.") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(), legend.position = "bottom",
+        strip.text = element_text(face = "bold", size = 11), plot.title.position = "plot", panel.spacing.x = unit(1.2, "lines"))
+ggsave("plots/TEXT_genocide_mentions.png", g5, width = 15, height = 5.5, dpi = 200, bg = "white")
+cat("saved plots/TEXT_genocide_mentions.png\n")

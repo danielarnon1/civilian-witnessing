@@ -227,6 +227,9 @@ build_survey <- function(ttl) {
     })
   }
 
+  # ---- mentions of "genocide" in the Q3 three words (from 09_open_text.R)
+  genocide <- if (file.exists("genocide_mentions.csv")) read.csv("genocide_mentions.csv") %>% filter(survey == ttl) else NULL
+
   # ---- moderation by prior sympathies in OTHER conflicts (from 18_other_conflict_priors.R)
   other_priors <- NULL
   if (file.exists("other_conflict_interactions.csv") && file.exists("other_conflict_priors.csv")) {
@@ -248,7 +251,7 @@ build_survey <- function(ttl) {
        fielded = paste(range(d$year_resp), collapse = "-"),
        dist = dist, sample = sample, te = te,
        het = het %>% mutate(across(c(stat, p, q), ~ signif(.x, 4))),
-       sub = sub, bygroup = bygroup, words = words, other_priors = other_priors)
+       sub = sub, bygroup = bygroup, words = words, other_priors = other_priors, genocide = genocide)
 }
 
 out <- list(
@@ -259,7 +262,8 @@ out <- list(
   controls = list(demo = c("Age", "Female", "White", "4-year degree", "Income (8 brackets)", "Party ID (7-pt)", "Ideology (7-pt)",
                            "Religious attendance"),
                   priors = c("Social media use", "Followed this conflict (not Sudan)", "Prior sympathy in this conflict")),
-  surveys = map(surveys$title, build_survey) %>% set_names(surveys$survey)
+  surveys = map(surveys$title, build_survey) %>% set_names(surveys$survey),
+  genocide_pooled = if (file.exists("genocide_mentions.csv")) read.csv("genocide_mentions.csv") %>% filter(survey == "Pooled (3 surveys)") else NULL
 )
 
 json <- toJSON(out, auto_unbox = TRUE, digits = 4, na = "null", null = "null")
