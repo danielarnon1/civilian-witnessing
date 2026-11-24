@@ -29,6 +29,14 @@ Pooled across surveys:
 - **Sudan:** RSF posts move "reduce aid" +15 and "no pressure" −14.
 - **NK:** posts about either side raise "diplomatic pressure" by about 7 points.
 
+**Q6 as three outcomes (since 2026-11-24).** Q6 is likewise analysed as three 0/1 shares on the full sample, which sum to 100%: `q6_toofar` (A has gone too far), `q6_defend` (A is defending its interests) and `dk_justified` (don't know). This applies to `04`, `05`, `07`, `17_q6_binary.R` and the dashboard; the 1–3 `justified` scale remains only inside the index (`13`).
+
+Pooled across surveys:
+- **Palestine / Armenia / RSF posts** raise "gone too far" by 7.6 points and lower "defending" by 5.4 (both p < .01).
+- **Israel / Azerbaijan / SAF posts** move neither.
+- **Sudan:** RSF posts move "gone too far" +16.8 and "don't know" −9.5.
+- **NK:** Azerbaijan posts lower "gone too far" by 8.6 and raise "don't know" by 10.3.
+
 ## Hypotheses (`13_victim_direction.R`; primary = Lin adjustment for prior sympathy)
 
 Victim-direction effect = average shift toward the side whose suffering was shown, over posts about both sides. Index = mean of Q5–Q7, each in control-group SDs.

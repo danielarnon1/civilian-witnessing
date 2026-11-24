@@ -10,7 +10,8 @@ dir.create("plots", showWarnings = FALSE)
 outcomes <- tribble(
   ~var,           ~label,                                            ~direction,
   "symp_A",       "Q5 Sympathies (1-5; neither / not sure = 3)", "Positive = more sympathy toward Israel / Azerbaijan / SAF",
-  "justified",    "Q6 Actions justified (1 too far, 2 DK, 3 justified)", "Positive = more favorable view of Israel / Azerbaijan / SAF actions",
+  "q6_toofar",    "Q6 A has gone too far (share)", "Positive = more say Israel / Azerbaijan / SAF has gone too far; its actions are not justified",
+  "q6_defend",    "Q6 A is defending its interests (share)", "Positive = more say Israel / Azerbaijan / SAF is defending its interests; its actions are justified",
   "dk_justified", "Q6 Don't know (share)",                           "Positive = more 'don't know enough'",
   "q7_reduce",    "Q7 U.S. should reduce military aid to A (share)", "Positive = more choose: reduce military aid to Israel / Azerbaijan / SAF until it ends the war",
   "q7_pressure",  "Q7 U.S. should apply diplomatic pressure, keep aid (share)", "Positive = more choose: diplomatic pressure on Israel / Azerbaijan / SAF but keep aid",
@@ -86,7 +87,8 @@ plot_te <- function(v, file) {
 }
 
 plot_te("symp_A",       "TE_Q5_sympathies.png")
-plot_te("justified",    "TE_Q6_justified.png")
+plot_te("q6_toofar",    "TE_Q6_gone_too_far.png")
+plot_te("q6_defend",    "TE_Q6_defending_interests.png")
 plot_te("dk_justified", "TE_Q6_dont_know.png")
 plot_te("q7_reduce",    "TE_Q7_reduce_aid.png")
 plot_te("q7_pressure",  "TE_Q7_diplomatic_pressure.png")

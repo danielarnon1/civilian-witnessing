@@ -13,7 +13,7 @@
 source("00_prepare.R")
 suppressMessages(library(estimatr))
 
-OUT_LAB <- c(symp_A = "Q5 Sympathy toward A (1-5, middle = 3)", justified = "Q6 A's actions justified (1-3)",
+OUT_LAB <- c(symp_A = "Q5 Sympathy toward A (1-5, middle = 3)", q6_toofar = "Q6 A has gone too far (share)", q6_defend = "Q6 A is defending its interests (share)",
              dk_justified = "Q6 Don't know (share)", q7_reduce = "Q7 Reduce military aid to A (share)", q7_pressure = "Q7 Diplomatic pressure, keep aid (share)",
              q7_nopress = "Q7 Let A act, no U.S. pressure (share)",
              dk_us = "Q7 Don't know (share)", attn_little = "Q8 Too little attention (share)",

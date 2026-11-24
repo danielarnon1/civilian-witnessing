@@ -89,6 +89,9 @@ dd_all <- raw %>%
     # Robustness: three-way shares (toward A / middle / toward B)
     q5_A = as.numeric(q5 %in% 1:2), q5_mid = as.numeric(q5 %in% c(3, 6, 7)), q5_B = as.numeric(q5 %in% 4:5),
     dk_justified = as.numeric(q6 == 3),
+    # Q6 as three 0/1 outcomes on the full sample (they sum to 1; dk_justified is the third)
+    q6_toofar    = as.numeric(q6 == 2),   # A has gone too far; actions not justified
+    q6_defend    = as.numeric(q6 == 1),   # A is defending its interests; actions justified
     dk_us        = as.numeric(q7 == 4),
     # Q7 as four 0/1 outcomes on the full sample (each option vs. everything else; they sum to 1)
     q7_reduce    = as.numeric(q7 == 3),   # reduce military aid to A until it ends the war

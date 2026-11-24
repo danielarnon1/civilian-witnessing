@@ -23,7 +23,8 @@ keep_levels <- function(x, treat, mod) {
 OUTCOMES <- tribble(
   ~key,           ~label,                                   ~short,                ~scale,      ~dir,
   "symp_A",       "Q5 Sympathies",                          "Sympathy (1-5)",      "1-5 scale", "Higher = more sympathy toward A",
-  "justified",    "Q6 A's military actions are justified",  "Actions justified (1-3)", "1-3 scale", "1 = gone too far, 2 = don't know, 3 = justified",
+  "q6_toofar",    "Q6 A has gone too far",                  "Q6 gone too far",     "share",     "Share saying A has gone too far and its military actions are not justified",
+  "q6_defend",    "Q6 A is defending its interests",        "Q6 defending",        "share",     "Share saying A is defending its interests and its military actions are justified",
   "dk_justified", "Q6 Don't know enough",                   "Q6 don't know",       "share",     "Share answering 'don't know enough' on Q6",
   "q7_reduce",    "Q7 U.S. should reduce military aid to A", "Q7 reduce aid",      "share",     "Share choosing: reduce military aid to A until it ends the war",
   "q7_pressure",  "Q7 U.S. should apply diplomatic pressure", "Q7 pressure",       "share",     "Share choosing: diplomatic pressure on A but keep aid",
